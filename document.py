@@ -16,7 +16,7 @@ import argparse
 import hashlib
 import io
 import glob
-import os
+#import os
 import struct
 import sys
 import zipfile
@@ -211,7 +211,7 @@ def decrypt_document(data, directory):
     hdr = data[:0x10]
     if hdr != pgd_hdr:
         print('PGD magic mismatch')
-        os._exit(1)
+        sys.exit(1)
     
     # DOC Header
     o = 0x10
@@ -225,21 +225,21 @@ def decrypt_document(data, directory):
     # if mac != b'\0' * 8:
     #     if mac != bbox_mac_gen_enc(hdr, ins):
     #         print('DOC Header BB MAC mismatch')
-    #         os._exit(1)
+    #         sys.exit(1)
     
     if sha1hash(hdr) != sha1:
         print('DOC Header SHA1 mismatch')
-        os._exit(1)
+        sys.exit(1)
     
     msg = _decrypt_des(hdr)
     
     if msg[:4] != b'DOC ':
         print('DOC magic mismatch')
-        os._exit(1)
+        sys.exit(1)
     
     if msg[0x04:0x0C] != b'\0\0\1\0\0\0\1\0':
         print('Unknown mismatch')
-        os._exit(1)
+        sys.exit(1)
     
     print('Game ID:', msg[0x0C:0x1C].decode().rstrip('\0'))
     
@@ -257,17 +257,17 @@ def decrypt_document(data, directory):
     # if mac != b'\0' * 8:
     #     if mac != bbox_mac_gen_enc(hdr, ins):
     #         print('INFO Block BB MAC mismatch')
-    #         os._exit(1)
+    #         sys.exit(1)
     
     if sha1hash(hdr) != sha1:
         print('INFO Block SHA1 mismatch')
-        os._exit(1)
+        sys.exit(1)
     
     msg = _decrypt_des(hdr)
     
     if msg[0:4] != b'\xFF' * 4:
         print('Marker mismatch')
-        os._exit(1)
+        sys.exit(1)
     
     psp_image_count = struct.unpack_from('<I', msg, 0x04)[0]
     ps3_image_count = struct.unpack_from('<I', msg, 0x1f388 if big_flag else 0x3188)[0]
@@ -456,7 +456,7 @@ def extract_document(document, output):
         
         if struct.unpack_from('<I', buf, 0)[0] != 0x20434F44:
             print('Not a Decrypted PS1 DOCUMENT.DAT file')
-            exit
+            sys.exit(1)
         
         num_pages = struct.unpack_from('<I', buf, 132)[0]
         print('Num pages:', num_pages)
@@ -470,7 +470,7 @@ def extract_document(document, output):
             size_low = struct.unpack_from('<I', buf, 12)[0]
             i.seek(offset_low)
             
-            with open(output + '/%03d.png' % page + 1, 'wb') as o:
+            with open(output + '/{0:03d}.png'.format(page + 1), 'wb') as o:
                 o.write(i.read(size_low))
 
 def create_document_from_dir(gameid, dir, doc):
@@ -502,17 +502,17 @@ if __name__ == "__main__":
     if args.command[0] == 'decrypt':
         if not args.directory:
             print('Must specify --directory')
-            os._exit(1)
+            sys.exit(1)
         if not args.document:
             print('Must specify --document')
-            os._exit(1)
+            sys.exit(1)
     if args.command[0] == 'encrypt':
         if not args.directory:
             print('Must specify --directory')
-            os._exit(1)
+            sys.exit(1)
         if not args.document:
             print('Must specify --document')
-            os._exit(1)
+            sys.exit(1)
     
     if args.command[0] == 'create':
         print('Create', args.document)
@@ -522,19 +522,19 @@ if __name__ == "__main__":
     if args.command[0] == 'view':
         if not args.document:
             print('Must specify --document')
-            os._exit(1)
+            sys.exit(1)
         if not args.page:
             print('Must specify --page')
-            os._exit(1)
+            sys.exit(1)
         view_document(args.document, int(args.page))
 
     if args.command[0] == 'extract':
         if not args.document:
             print('Must specify --document')
-            os._exit(1)
+            sys.exit(1)
         if not args.output:
             print('Must specify --output')
-            os._exit(1)
+            sys.exit(1)
         extract_document(args.document, args.output)
         
     if args.command[0] == 'decrypt':
